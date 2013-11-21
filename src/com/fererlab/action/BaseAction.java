@@ -2,6 +2,7 @@ package com.fererlab.action;
 
 import com.fererlab.collect.Collector;
 import com.fererlab.collect.Exec;
+import com.fererlab.dto.Param;
 import com.fererlab.dto.Request;
 import com.fererlab.dto.RequestKeys;
 import com.thoughtworks.xstream.XStream;
@@ -49,12 +50,14 @@ public class BaseAction implements Action {
 
         // if RESPONSE_TYPE is defined and is JSON return toJson
         if (request.getHeaders().containsKey(RequestKeys.RESPONSE_TYPE.getValue())
-                && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue()).getValue()).equalsIgnoreCase("JSON")) {
-            return toJSON(objects);
+                && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue()).getValue()).equalsIgnoreCase("json")) {
+            request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "json"));
+            return "[" + toJSON(objects) + "]";
         }
 
         // else if RESPONSE_TEMPLATE exists return XML with template
         else if (request.getParams().containsKey(RequestKeys.RESPONSE_TEMPLATE.getValue())) {
+            request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "xml"));
             StringBuilder responseContent = new StringBuilder();
             responseContent.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             responseContent.append("<?xml-stylesheet type=\"text/xsl\" href=\"")
@@ -73,7 +76,8 @@ public class BaseAction implements Action {
 
         // else return XML
         else {
-            return toXML(objects);
+            request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "xml"));
+            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>" + toXML(objects) + "</root>";
         }
 
     }
@@ -87,8 +91,13 @@ public class BaseAction implements Action {
         StringBuilder stringBuilder = new StringBuilder();
         for (Object object : objects) {
             stringBuilder.append(toJSON(object));
+            stringBuilder.append(",");
         }
-        return stringBuilder.toString();
+        String json = stringBuilder.toString();
+        if (json.endsWith(",")) {
+            return json.substring(0, json.length() - 1);
+        }
+        return json;
     }
 
     public String toJSON(Object o) {
