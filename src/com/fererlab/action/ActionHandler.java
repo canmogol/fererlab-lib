@@ -33,8 +33,8 @@ public class ActionHandler {
     public Response runAction(final Request request) {
 
         // prepare method and action class
-        Method method = null;
-        Class<?> actionClass = null;
+        Method method;
+        Class<?> actionClass;
 
         // get the request Method(GET, POST etc.) and URI
         String requestMethod = request.getParams().get(RequestKeys.REQUEST_METHOD.getValue()).getValue().toString();
@@ -99,8 +99,22 @@ public class ActionHandler {
                 methodName = executionParam.getValue();
                 //   welcome
                 templateName = executionParam.getValueSecondary();
+            } else if (requestURI.startsWith("/*/")) {
+                for (String uri : uriExecutionMap.keySet()) {
+                    //  requestURI      /*/all/Product
+                    //  uri             /*/all
+                    if (requestURI.startsWith(uri)) {
+                        //   com.sample.app.action.MainAction, welcome
+                        Param<String, String> executionParam = uriExecutionMap.get(uri);
+                        //   com.sample.app.action.MainAction
+                        className = executionParam.getKey();
+                        //   welcome
+                        methodName = executionParam.getValue();
+                        //   welcome
+                        templateName = executionParam.getValueSecondary();
+                    }
+                }
             }
-
         }
 
         // if className not found, check the '*' method
@@ -119,8 +133,25 @@ public class ActionHandler {
                     methodName = executionParam.getValue();
                     //   welcome
                     templateName = executionParam.getValueSecondary();
-                } else {
-                    // if still className not found set it to default which is [GET] '/'
+                } else if (requestURI.startsWith("/*/")) {
+                    for (String uri : uriExecutionMap.keySet()) {
+                        //  requestURI      /*/all/Product
+                        //  uri             /*/all
+                        if (requestURI.startsWith(uri)) {
+                            //   com.sample.app.action.MainAction, welcome
+                            Param<String, String> executionParam = uriExecutionMap.get(uri);
+                            //   com.sample.app.action.MainAction
+                            className = executionParam.getKey();
+                            //   welcome
+                            methodName = executionParam.getValue();
+                            //   welcome
+                            templateName = executionParam.getValueSecondary();
+                        }
+                    }
+                }
+
+                // if still className not found set it to default which is [GET] '/'
+                if (className == null) {
                     requestURI = "/";
                     // get the default
                     Param<String, String> executionParam = uriExecutionMap.get(requestURI);
