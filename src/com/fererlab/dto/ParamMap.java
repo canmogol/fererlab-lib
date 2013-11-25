@@ -9,18 +9,19 @@ import java.util.TreeMap;
  */
 public class ParamMap<K extends String, V extends Param<K, Object>> extends TreeMap<K, V> {
 
-    private List<Param<K, Object>> paramList = new ArrayList<Param<K, Object>>();
-
     public void addParam(V param) {
-        paramList.add(param);
         put(param.getKey(), param);
     }
 
     public List<Param<K, Object>> getParamList() {
-        return paramList;
+        List<Param<K, Object>> params = new ArrayList<Param<K, Object>>();
+        for (V v : values()) {
+            params.add(v);
+        }
+        return params;
     }
 
-    public Object getValue(K k){
+    public Object getValue(K k) {
         return get(k).getValue();
     }
 

@@ -42,8 +42,12 @@ public class BaseCRUDAction<T extends Model> extends BaseAction implements CRUDA
     public List<T> findAll(ParamMap<String, Param<String, Object>> keyValuePairs) {
         FutureList<T> futureList = Ebean.createQuery(type).findFutureList();
         ExpressionList<T> expressionList = Ebean.find(type).where();
+        String orderBy = null;
 
         if (keyValuePairs != null) {
+            if (keyValuePairs.containsKey("orderBy") && keyValuePairs.getValue("orderBy") != null) {
+                orderBy = keyValuePairs.remove("orderBy").getValue().toString();
+            }
             for (Param<String, Object> param : keyValuePairs.getParamList()) {
                 switch (param.getRelation()) {
                     case EQ:
@@ -70,8 +74,11 @@ public class BaseCRUDAction<T extends Model> extends BaseAction implements CRUDA
                 }
             }
         }
-
-        return expressionList.findList();
+        if (orderBy != null) {
+            return expressionList.order(orderBy).findList();
+        } else {
+            return expressionList.findList();
+        }
     }
 
     @Override
@@ -79,28 +86,36 @@ public class BaseCRUDAction<T extends Model> extends BaseAction implements CRUDA
         T t = null;
         try {
             t = type.newInstance();
+
             for (Method method : type.getDeclaredMethods()) {
                 if (method.getName().startsWith("set")) {
                     String fieldName = method.getName().substring(3, 4).toLowerCase(Locale.ENGLISH) + method.getName().substring(4);
                     if (keyValuePairs.containsKey(fieldName)) {
                         try {
                             Class<?>[] parameterClasses = method.getParameterTypes();
+                            method = t.getClass().getDeclaredMethod(method.getName(), parameterClasses);
                             Object value = keyValuePairs.get(fieldName).getValue();
-                            if (parameterClasses.length > 0) {
-                                try {
-                                    // TODO create object creators for each type available
-                                    Constructor constructor = Class.forName(parameterClasses[0].getName()).getConstructor(String.class);
-                                    value = constructor.newInstance(keyValuePairs.get(fieldName).getValue());
-                                } catch (NoSuchMethodException e) {
-                                    e.printStackTrace();
-                                } catch (ClassNotFoundException e) {
-                                    e.printStackTrace();
+                            try {
+                                method.invoke(t, value);
+                            } catch (IllegalArgumentException iae) {
+                                if (parameterClasses.length > 0) {
+                                    try {
+                                        // TODO create object creators for each type available
+                                        Constructor constructor = Class.forName(parameterClasses[0].getName()).getConstructor(String.class);
+                                        value = constructor.newInstance(keyValuePairs.get(fieldName).getValue());
+                                        method.invoke(t, value);
+                                    } catch (NoSuchMethodException e) {
+                                        e.printStackTrace();
+                                    } catch (ClassNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
-                            method.invoke(t, value);
                         } catch (InvocationTargetException e) {
                             e.printStackTrace();
                         } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
                             e.printStackTrace();
                         }
                     }
@@ -136,19 +151,24 @@ public class BaseCRUDAction<T extends Model> extends BaseAction implements CRUDA
                     if (keyValuePairs.containsKey(fieldName)) {
                         try {
                             Class<?>[] parameterClasses = method.getParameterTypes();
+                            method = t.getClass().getDeclaredMethod(method.getName(), parameterClasses);
                             Object value = keyValuePairs.get(fieldName).getValue();
-                            if (parameterClasses.length > 0) {
-                                try {
-                                    // TODO create object creators for each type available
-                                    Constructor constructor = Class.forName(parameterClasses[0].getName()).getConstructor(String.class);
-                                    value = constructor.newInstance(keyValuePairs.get(fieldName).getValue());
-                                } catch (NoSuchMethodException e) {
-                                    e.printStackTrace();
-                                } catch (ClassNotFoundException e) {
-                                    e.printStackTrace();
+                            try {
+                                method.invoke(t, value);
+                            } catch (IllegalArgumentException iae) {
+                                if (parameterClasses.length > 0) {
+                                    try {
+                                        // TODO create object creators for each type available
+                                        Constructor constructor = Class.forName(parameterClasses[0].getName()).getConstructor(String.class);
+                                        value = constructor.newInstance(keyValuePairs.get(fieldName).getValue());
+                                        method.invoke(t, value);
+                                    } catch (NoSuchMethodException e) {
+                                        e.printStackTrace();
+                                    } catch (ClassNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
-                            method.invoke(t, value);
                         } catch (InvocationTargetException e) {
                             e.printStackTrace();
                         } catch (IllegalAccessException e) {

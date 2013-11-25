@@ -112,6 +112,8 @@ public class ActionHandler {
                         methodName = executionParam.getValue();
                         //   welcome
                         templateName = executionParam.getValueSecondary();
+                        // found the class/method
+                        break;
                     }
                 }
             }

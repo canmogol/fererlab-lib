@@ -1,5 +1,9 @@
 package com.avaje.ebeaninternal.server.lib;
 
+import com.avaje.ebean.EbeanServer;
+import com.avaje.ebeaninternal.server.lib.sql.DataSourceGlobalManager;
+import com.avaje.ebeaninternal.server.lib.thread.ThreadPoolManager;
+
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -18,7 +22,8 @@ import java.util.logging.Logger;
 public class EbeanShutdownHack {
     private static final Logger logger = Logger.getLogger(EbeanShutdownHack.class.getName());
 
-    public static void shutdownAllActiveEbeanServers() {
+    public static void shutdownAllActiveEbeanServers(EbeanServer ebeanServer) {
+        ebeanServer.getServerCacheManager().clearAll();
         // First remove all the background thread runnables.  To do this, we need to synchronize on its monitor field,
         // which is private
         Object monitor = getPrivateField(BackgroundThread.class, "monitor",
@@ -38,7 +43,6 @@ public class EbeanShutdownHack {
                         runnable.run();
                     } catch (Exception ex) {
                         logger.log(Level.SEVERE, null, ex);
-                        ex.printStackTrace();
                     }
 
                 }
@@ -47,6 +51,11 @@ public class EbeanShutdownHack {
         } catch (Exception e) {
             //e.printStackTrace();
         }
+
+        ThreadPoolManager.shutdown();
+        DataSourceGlobalManager.shutdown();
+        ebeanServer = null;
+
     }
 
     private static Object getPrivateField(Class clazz, String name, Object object) {
