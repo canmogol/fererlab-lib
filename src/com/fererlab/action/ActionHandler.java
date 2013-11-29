@@ -41,7 +41,7 @@ public class ActionHandler {
         String requestURI = request.getParams().get(RequestKeys.URI.getValue()).getValue().toString();
 
         // URI starting with /_/ indicates it is a resource but not an action
-        if (requestURI.startsWith("/_/")) {
+        if (requestURI.startsWith("/_/") && requestURI.lastIndexOf("..") == -1) {
 
             Map<byte[], String> contentAndExtension = Cache.getContentIfCached(requestURI);
             if (contentAndExtension == null) {

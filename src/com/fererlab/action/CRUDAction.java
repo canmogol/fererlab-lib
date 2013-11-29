@@ -11,6 +11,8 @@ import java.util.List;
  */
 public interface CRUDAction<T extends Model> extends Action {
 
+    public Class<T> getType();
+
     public T find(Object id);
 
     public List<T> findAll(ParamMap<String, Param<String, Object>> keyValuePairs);
