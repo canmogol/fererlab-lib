@@ -52,7 +52,11 @@ public class BaseAction implements Action {
         if (request.getHeaders().containsKey(RequestKeys.RESPONSE_TYPE.getValue())
                 && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue()).getValue()).equalsIgnoreCase("json")) {
             request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "json"));
-            return "[" + toJSON(objects) + "]";
+            if (objects != null && objects.length == 1) {
+                return toJSON(objects);
+            } else {
+                return "[" + toJSON(objects) + "]";
+            }
         }
 
         // else if RESPONSE_TEMPLATE exists return XML with template

@@ -1,5 +1,6 @@
 package com.fererlab.action;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URL;
@@ -13,18 +14,20 @@ public class FileContentHandler {
     private String filePath;
     private String fileExtension = "";
 
-    public byte[] getContent(String contentPath, String filePath) {
+    public byte[] getContent(String contentPath, String filePath) throws FileNotFoundException {
         return getContent(contentPath + filePath);
     }
 
-    public byte[] getContent(String filePath) {
+    public byte[] getContent(String filePath) throws FileNotFoundException {
         byte[] bytes = new byte[0];
         fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1).trim();
         RandomAccessFile f = null;
         try {
-            f = new RandomAccessFile(filePath, "rw");
+            f = new RandomAccessFile(filePath, "r");
             bytes = new byte[(int) f.length()];
             f.read(bytes);
+        } catch (FileNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

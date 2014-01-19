@@ -7,6 +7,7 @@ import com.fererlab.map.CacheMap;
 import com.fererlab.map.ExecutionMap;
 import com.fererlab.map.MimeTypeMap;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashMap;
@@ -47,7 +48,17 @@ public class ActionHandler {
             if (contentAndExtension == null) {
                 // request URI is either one of these; xsl, css, js, image, file,
                 FileContentHandler fileContentHandler = new FileContentHandler();
-                byte[] content = fileContentHandler.getContent(fileContentHandler.getContentPath(), requestURI);
+                byte[] content = new byte[0];
+                try {
+                    content = fileContentHandler.getContent(fileContentHandler.getContentPath(), requestURI);
+                } catch (FileNotFoundException e) {
+                    return new Response(
+                            new ParamMap<String, Param<String, Object>>(),
+                            request.getSession(),
+                            Status.STATUS_NOT_FOUND,
+                            ""
+                    );
+                }
                 String extension = fileContentHandler.getFileExtension();
 
                 contentAndExtension = new HashMap<byte[], String>();

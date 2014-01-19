@@ -22,7 +22,11 @@ public class ParamMap<K extends String, V extends Param<K, Object>> extends Tree
     }
 
     public Object getValue(K k) {
-        return get(k).getValue();
+        try {
+            return get(k).getValue();
+        } catch (NullPointerException e) {
+            throw new NullPointerException(k);
+        }
     }
 
 }
