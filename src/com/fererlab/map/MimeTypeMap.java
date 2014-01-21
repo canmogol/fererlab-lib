@@ -10,6 +10,18 @@ import java.util.Properties;
  */
 public class MimeTypeMap extends HashMap<String, String> {
 
+    private static MimeTypeMap instance;
+
+    private MimeTypeMap() {
+    }
+
+    public static MimeTypeMap getInstance() {
+        if (instance == null) {
+            instance = new MimeTypeMap();
+        }
+        return instance;
+    }
+
     public void readMimeTypeMap(URL mimeTypeMapFile) {
         try {
             Properties properties = new Properties();

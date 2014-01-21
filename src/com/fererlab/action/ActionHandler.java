@@ -19,10 +19,10 @@ import java.util.Map;
  */
 public class ActionHandler {
 
-    private ExecutionMap executionMap = new ExecutionMap();
-    private AuthenticationAuthorizationMap authenticationAuthorizationMap = new AuthenticationAuthorizationMap();
-    private MimeTypeMap mimeTypeMap = new MimeTypeMap();
-    private CacheMap cacheMap = new CacheMap();
+    private ExecutionMap executionMap = ExecutionMap.getInstance();
+    private AuthenticationAuthorizationMap authenticationAuthorizationMap = AuthenticationAuthorizationMap.getInstance();
+    private MimeTypeMap mimeTypeMap = MimeTypeMap.getInstance();
+    private CacheMap cacheMap = CacheMap.getInstance();
 
     public ActionHandler(URL executionMapFile, URL authenticationAuthorizationMapFile, URL mimeTypeMapFile, URL cacheMapFile) {
         executionMap.readUriExecutionMap(executionMapFile);
@@ -47,8 +47,8 @@ public class ActionHandler {
         // URI starting with /_/ indicates it is a resource but not an action
         if (requestURI.startsWith("/_/") && requestURI.lastIndexOf("..") == -1) {
 
-            Map<byte[], String> contentAndExtension = Cache.getContentIfCached(requestURI);
-            if (contentAndExtension == null) {
+            Map.Entry<byte[], String> entry = Cache.getContentIfCached(requestURI);
+            if (entry == null) {
                 // request URI is either one of these; xsl, css, js, image, file,
                 FileContentHandler fileContentHandler = new FileContentHandler();
                 byte[] content = new byte[0];
@@ -63,13 +63,11 @@ public class ActionHandler {
                     );
                 }
                 String extension = fileContentHandler.getFileExtension();
-
-                contentAndExtension = new HashMap<byte[], String>();
+                Map<byte[], String> contentAndExtension = new HashMap<byte[], String>();
                 contentAndExtension.put(content, extension);
-                Cache.put(requestURI, contentAndExtension);
+                entry = contentAndExtension.entrySet().iterator().next();
+                Cache.put(requestURI, entry);
             }
-            Map.Entry<byte[], String> entry = contentAndExtension.entrySet().iterator().next();
-
             Response response = new Response(
                     new ParamMap<String, Param<String, Object>>(),
                     request.getSession(),

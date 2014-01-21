@@ -1,15 +1,18 @@
 package com.fererlab.action;
 
+import com.fererlab.cache.Cache;
 import com.fererlab.collect.Collector;
 import com.fererlab.collect.Exec;
-import com.fererlab.dto.Param;
-import com.fererlab.dto.Request;
-import com.fererlab.dto.RequestKeys;
+import com.fererlab.dto.*;
+import com.fererlab.map.MimeTypeMap;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 
+import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +46,43 @@ public class BaseAction implements Action {
 
     public XStream getXStream() {
         return xstream;
+    }
+
+    public Response fileContentResponse(Request request, String fileName) {
+        Map.Entry<byte[], String> entry = Cache.getContentIfCached(fileName);
+        if (entry == null) {
+            try {
+                Map<byte[], String> contentAndExtension = new HashMap<byte[], String>();
+                FileContentHandler fileContentHandler = new FileContentHandler();
+                byte[] content = new byte[0];
+                content = fileContentHandler.getContent(fileContentHandler.getContentPath(), fileName);
+                String extension = fileContentHandler.getFileExtension();
+                contentAndExtension.put(content, extension);
+                entry = contentAndExtension.entrySet().iterator().next();
+                Cache.put(fileName, entry);
+            } catch (FileNotFoundException e) {
+                return new Response(
+                        new ParamMap<String, Param<String, Object>>(),
+                        request.getSession(),
+                        Status.STATUS_NOT_FOUND,
+                        ""
+                );
+            }
+        }
+        Response response = new Response(
+                new ParamMap<String, Param<String, Object>>(),
+                request.getSession(),
+                Status.STATUS_OK,
+                entry.getKey()
+        );
+        response.getHeaders().put(
+                ResponseKeys.RESPONSE_TYPE.getValue(),
+                new Param<String, Object>(
+                        ResponseKeys.RESPONSE_TYPE.getValue(),
+                        MimeTypeMap.getInstance().get(entry.getValue())
+                )
+        );
+        return response;
     }
 
     @Override

@@ -15,6 +15,18 @@ import java.util.Map;
  */
 public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, List<String>>> {
 
+    private static AuthenticationAuthorizationMap instance;
+
+    private AuthenticationAuthorizationMap() {
+    }
+
+    public static AuthenticationAuthorizationMap getInstance() {
+        if (instance == null) {
+            instance = new AuthenticationAuthorizationMap();
+        }
+        return instance;
+    }
+
     public void readAuthenticationAuthorizationMap(URL file) {
         /*
         # URI               HTTP METHOD(s)              User

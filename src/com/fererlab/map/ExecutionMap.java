@@ -16,6 +16,18 @@ import java.util.TreeMap;
  */
 public class ExecutionMap extends TreeMap<String, Map<String, Param<String, String>>> {
 
+    private static ExecutionMap instance;
+
+    private ExecutionMap() {
+    }
+
+    public static ExecutionMap getInstance() {
+        if (instance == null) {
+            instance = new ExecutionMap();
+        }
+        return instance;
+    }
+
     public void readUriExecutionMap(URL file) {
          /*
         request method      ->    uri                ->   className, method

@@ -68,9 +68,9 @@ public class Cache {
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<byte[], String> getContentIfCached(String requestURI) {
-        if (cacheMap.containsKey(requestURI)) {
-            return (Map<byte[], String>) cacheMap.get(requestURI);
+    public static Map.Entry<byte[], String> getContentIfCached(String contentKey) {
+        if (cacheMap.containsKey(contentKey) && cacheMap.get(contentKey) instanceof Map.Entry) {
+            return (Map.Entry<byte[], String>) cacheMap.get(contentKey);
         } else {
             return null;
         }
