@@ -52,7 +52,7 @@ public class BaseAction implements Action {
         if (request.getHeaders().containsKey(RequestKeys.RESPONSE_TYPE.getValue())
                 && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue()).getValue()).equalsIgnoreCase("json")) {
             request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "json"));
-            if (objects != null && objects.length == 1) {
+            if ((objects != null && objects.length == 1) && !(objects[0] instanceof List)) {
                 return toJSON(objects);
             } else {
                 return "[" + toJSON(objects) + "]";

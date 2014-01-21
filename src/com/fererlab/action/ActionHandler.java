@@ -40,6 +40,9 @@ public class ActionHandler {
         // get the request Method(GET, POST etc.) and URI
         String requestMethod = request.getParams().get(RequestKeys.REQUEST_METHOD.getValue()).getValue().toString();
         String requestURI = request.getParams().get(RequestKeys.URI.getValue()).getValue().toString();
+        if (requestURI == null || requestURI.trim().isEmpty()) {
+            requestURI = "/";
+        }
 
         // URI starting with /_/ indicates it is a resource but not an action
         if (requestURI.startsWith("/_/") && requestURI.lastIndexOf("..") == -1) {
