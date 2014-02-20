@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  * acm | 1/23/13
  */
-public class BaseAction implements Action {
+public class BaseAction extends ActionResponse implements Action {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());
     private XStream xStreamJSON = new XStream(new JettisonMappedXmlDriver());
@@ -59,7 +59,7 @@ public class BaseAction implements Action {
                 String extension = fileContentHandler.getFileExtension();
                 contentAndExtension.put(content, extension);
                 entry = contentAndExtension.entrySet().iterator().next();
-                Cache.put(fileName, entry);
+                Cache.putIfCacheable(fileName, entry);
             } catch (FileNotFoundException e) {
                 return new Response(
                         new ParamMap<String, Param<String, Object>>(),
@@ -112,16 +112,24 @@ public class BaseAction implements Action {
                     .append("?")
                     .append(new Random().nextDouble())
                     .append("\"?>");
-            responseContent.append("<root>");
-            responseContent.append(toXML(objects));
-            responseContent.append("</root>");
+            if (objects.length > 1) {
+                responseContent.append("<root>");
+                responseContent.append(toXML(objects));
+                responseContent.append("</root>");
+            } else {
+                responseContent.append(toXML(objects));
+            }
             return responseContent.toString();
         }
 
         // else return XML
         else {
             request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "xml"));
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>" + toXML(objects) + "</root>";
+            if (objects.length > 1) {
+                return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>" + toXML(objects) + "</root>";
+            } else {
+                return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + toXML(objects);
+            }
         }
 
     }
