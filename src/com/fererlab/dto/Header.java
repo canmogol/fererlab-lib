@@ -10,7 +10,9 @@ import com.thoughtworks.xstream.annotations.XStreamConverter;
 @XStreamConverter(PairConverter.class)
 public class Header<Key, Value> extends Pair<Key, Value> {
 
-    public static final String STATUS = "success";
+    public static final String STATUS = "status";
+    public static final String STATUS_SUCCESS = "success";
+    public static final String STATUS_FAIL = "fail";
     public static final String MESSAGE = "";
 
     public Header<Key, Value> add(Key key, Value value) {

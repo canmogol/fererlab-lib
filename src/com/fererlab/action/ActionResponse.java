@@ -1,9 +1,6 @@
 package com.fererlab.action;
 
-import com.fererlab.dto.Request;
-import com.fererlab.dto.Response;
-import com.fererlab.dto.ServerResponse;
-import com.fererlab.dto.Status;
+import com.fererlab.dto.*;
 
 /**
  * acm
@@ -35,7 +32,7 @@ public abstract class ActionResponse {
 
     private PrepareResponse action(Request request, String[] messageAndStatus, Status st) {
         String message = messageAndStatus.length > 0 ? messageAndStatus[0] != null ? messageAndStatus[0] : "" : "";
-        String status = messageAndStatus.length > 1 ? messageAndStatus[0] != null ? messageAndStatus[0] : "success" : "success";
+        String status = (messageAndStatus.length > 1 && messageAndStatus[1] != null) ? messageAndStatus[1] : Header.STATUS_SUCCESS;
         return new PrepareResponse(request, st, new ServerResponse(status, message));
     }
 
