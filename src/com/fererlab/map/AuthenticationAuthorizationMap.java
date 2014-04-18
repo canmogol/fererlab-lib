@@ -1,9 +1,7 @@
 package com.fererlab.map;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +30,10 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
         # URI               HTTP METHOD(s)              User
         /welcome            [*]                         *
         /admin              [POST,PUT,DELETE]           admin,system,root
+
+        # PACKAGE.CLASS                             METHOD          User
+        com.bugzter.app.action.UserCRUDAction       login           admin,system
+        com.bugzter.app.action.GenericAction        *               system
         */
 
         // read ExecutionMap.properties
@@ -44,10 +46,13 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
                 FileReader fileReader = new FileReader(file.getFile());
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
                 while ((currentLine = bufferedReader.readLine()) != null) {
+                    if (currentLine.trim().isEmpty() || currentLine.startsWith("#")){
+                        continue;
+                    }
                     /*
                     /admin              [POST,PUT,DELETE]           admin,system,root
                      */
-                    if (!currentLine.startsWith("#") && currentLine.lastIndexOf('[') != -1) {
+                    if (currentLine.startsWith("/")) {
                         //      /admin
                         String uri = currentLine.substring(0, currentLine.lastIndexOf('[')).trim();
                         //      POST,PUT,DELETE]            admin,system,root
@@ -60,9 +65,6 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
 
                             //      admin,system,root
                             String startingFromGroupNames = startingFromHttpMethods.substring(startingFromHttpMethods.lastIndexOf(']') + 1).trim();
-                            //      com.sample.app.action.MainAction   welcome         welcome
-                            //      OR
-                            //      com.sample.app.action.MainAction   welcome
                             String[] groupsNames = startingFromGroupNames.split(",");
 
                             // list of group names
@@ -70,7 +72,7 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
 
                             for (String groupName : groupsNames) {
                                 if (groupName != null && !groupName.trim().isEmpty()) {
-                                    groupNamesList.add(groupName);
+                                    groupNamesList.add(groupName.trim());
                                 }
                             }
 
@@ -83,15 +85,39 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
                                     this.put(requestMethod, new HashMap<String, List<String>>());
                                 }
                                 // add this (uri -> className, methodName) to this request method's map
+                                //       "POST" -> {"/admin" => [admin,system,root]}
                                 this.get(requestMethod).put(uri, groupNamesList);
                             }
                         }
                     }
+                    /*
+                    com.bugzter.app.action.UserCRUDAction       login           admin,system
+                     */
+                    else {
+
+                        //      "com.bugzter.app.action.UserCRUDAction"
+                        String packageClassName = currentLine.split(" ")[0].trim();
+                        //      "login           admin,system"
+                        String methodAndGroups = currentLine.substring(packageClassName.length()).trim();
+                        //      "login"
+                        String methodName = methodAndGroups.split(" ")[0].trim();
+                        //      "admin,system"
+                        String groups = methodAndGroups.substring(methodName.length()).trim();
+                        String[] groupsNames = groups.split(",");
+
+                        // list of group names
+                        List<String> groupNamesList = new ArrayList<String>();
+                        for (String groupName : groupsNames) {
+                            if (groupName != null && !groupName.trim().isEmpty()) {
+                                groupNamesList.add(groupName.trim());
+                            }
+                        }
+                        // "com.bugzter.app.action.UserCRUDAction" -> {"login" => [admin,system]}
+                        this.get(packageClassName).put(methodName, groupNamesList);
+                    }
                 }
 
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

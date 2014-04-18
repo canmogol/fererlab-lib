@@ -29,6 +29,7 @@ public class BaseAction extends ActionResponse implements Action {
 
     public BaseAction() {
         xstream.autodetectAnnotations(true);
+        xstream.setMode(XStream.NO_REFERENCES);
         xStreamJSON.autodetectAnnotations(true);
     }
 
@@ -89,8 +90,8 @@ public class BaseAction extends ActionResponse implements Action {
     public String toContent(Request request, Object... objects) {
 
         // if RESPONSE_TYPE is defined and is JSON return toJson
-        if (request.getHeaders().containsKey(RequestKeys.RESPONSE_TYPE.getValue())
-                && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue()).getValue()).equalsIgnoreCase("json")) {
+        if (request.getHeaders().containsKey(RequestKeys.RESPONSE_TYPE.getValue().toLowerCase())
+                && ((String) request.getHeaders().get(RequestKeys.RESPONSE_TYPE.getValue().toLowerCase()).getValue()).equalsIgnoreCase("json")) {
             request.getHeaders().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TYPE.getValue(), "json"));
             if ((objects != null && objects.length == 1) && !(objects[0] instanceof List)) {
                 return toJSON(objects);

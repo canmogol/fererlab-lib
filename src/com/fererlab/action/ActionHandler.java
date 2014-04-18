@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -180,16 +179,16 @@ public class ActionHandler {
 
         }
 
+        /*
+        // find the user's group names
+        String[] groupNamesCommaSeparated = null;
+        if (request.getSession().containsKey(SessionKeys.GROUP_NAMES.getValue())) {
+            groupNamesCommaSeparated = ((String) request.getSession().get(SessionKeys.GROUP_NAMES.getValue())).split(",");
+        }
 
         // check the AuthenticationAuthorizationMap contains requestMethod
         if (authenticationAuthorizationMap.containsKey(requestMethod)
                 || authenticationAuthorizationMap.containsKey("*")) {
-
-            // find the user's group names
-            String[] groupNamesCommaSeparated = new String[]{"admin"};
-            if (request.getSession().containsKey(SessionKeys.GROUP_NAMES.getValue())) {
-                groupNamesCommaSeparated = ((String) request.getSession().get(SessionKeys.GROUP_NAMES.getValue())).split(",");
-            }
 
             // authorization flag for user's group
             boolean userAuthorized = false;
@@ -197,20 +196,19 @@ public class ActionHandler {
             // for this http request method, like GET, POST or PUT
             Map<String, List<String>> uriGroupNames = authenticationAuthorizationMap.get(requestMethod);
 
+            // may be request method defined as *
+            if (uriGroupNames == null) {
+                uriGroupNames = authenticationAuthorizationMap.get("*");
+            }
+
             // check this requested uri has any authentication/authorization
             if (uriGroupNames.containsKey(requestURI)) {
 
-                // the user does not have any groups but this uri needs some
-                // return STATUS_UNAUTHORIZED and redirect
+                // the user does not have any groups but this uri needs at least one group
+                // return STATUS_UNAUTHORIZED
                 if (groupNamesCommaSeparated == null) {
-                    ParamMap<String, Param<String, Object>> stringParamParamMap = new ParamMap<String, Param<String, Object>>();
-                    Object hostName = request.getHeaders().getValue(RequestKeys.HOST_NAME.getValue());
-                    Object hostPort = request.getHeaders().getValue(RequestKeys.HOST_PORT.getValue());
-                    Object applicationUri = request.getParams().getValue(RequestKeys.APPLICATION_URI.getValue());
-                    String redirectUrl = hostName + ":" + (hostPort != null ? hostPort : "") + "/" + applicationUri;
-                    stringParamParamMap.addParam(new Param<String, Object>("Refresh", "0; url=http://" + redirectUrl));
                     return new Response(
-                            stringParamParamMap,
+                            new ParamMap<String, Param<String, Object>>(),
                             request.getSession(),
                             Status.STATUS_UNAUTHORIZED,
                             ""
@@ -220,7 +218,7 @@ public class ActionHandler {
                 // authorized groups for this uri
                 List<String> authorizedGroups = uriGroupNames.get(requestURI);
 
-                // user has at least one group, it means user is authenticated
+                // user has at least one group
                 // if the authorizedGroups contains (*) it means any authenticated client may request this uri
                 if (authorizedGroups.contains("*")) {
                     userAuthorized = true;
@@ -237,16 +235,10 @@ public class ActionHandler {
                 }
 
 
-                // if the user is not authorized return STATUS_UNAUTHORIZED and redirect
+                // if the user is not authorized return STATUS_UNAUTHORIZED
                 if (!userAuthorized) {
                     return new Response(
-                            new ParamMap<String, Param<String, Object>>() {{
-                                Object hostName = request.getParams().getValue(RequestKeys.HOST_NAME.getValue());
-                                Object hostPort = request.getParams().getValue(RequestKeys.HOST_PORT.getValue());
-                                Object applicationUri = request.getParams().getValue(RequestKeys.APPLICATION_URI.getValue());
-                                String redirectUrl = hostName + ":" + (hostPort != null ? hostPort : "") + "/" + applicationUri;
-                                addParam(new Param<String, Object>("Refresh", "0; url=http://" + redirectUrl));
-                            }},
+                            new ParamMap<String, Param<String, Object>>(),
                             request.getSession(),
                             Status.STATUS_UNAUTHORIZED,
                             ""
@@ -265,16 +257,10 @@ public class ActionHandler {
                 if (uriGroupNames.containsKey(requestURI)) {
 
                     // the user does not have any groups but this uri needs some
-                    // return STATUS_UNAUTHORIZED and redirect
+                    // return STATUS_UNAUTHORIZED
                     if (groupNamesCommaSeparated == null) {
                         return new Response(
-                                new ParamMap<String, Param<String, Object>>() {{
-                                    Object hostName = request.getParams().getValue(RequestKeys.HOST_NAME.getValue());
-                                    Object hostPort = request.getParams().getValue(RequestKeys.HOST_PORT.getValue());
-                                    Object applicationUri = request.getParams().getValue(RequestKeys.APPLICATION_URI.getValue());
-                                    String redirectUrl = hostName + ":" + (hostPort != null ? hostPort : "") + "" + applicationUri;
-                                    addParam(new Param<String, Object>("Refresh", "0; url=http://" + redirectUrl));
-                                }},
+                                new ParamMap<String, Param<String, Object>>(),
                                 request.getSession(),
                                 Status.STATUS_UNAUTHORIZED,
                                 ""
@@ -290,16 +276,10 @@ public class ActionHandler {
                         }
                     }
 
-                    // if the user is not authorized return STATUS_UNAUTHORIZED and redirect
+                    // if the user is not authorized return STATUS_UNAUTHORIZED
                     if (!userAuthorized) {
                         return new Response(
-                                new ParamMap<String, Param<String, Object>>() {{
-                                    Object hostName = request.getParams().getValue(RequestKeys.HOST_NAME.getValue());
-                                    Object hostPort = request.getParams().getValue(RequestKeys.HOST_PORT.getValue());
-                                    Object applicationUri = request.getParams().getValue(RequestKeys.APPLICATION_URI.getValue());
-                                    String redirectUrl = hostName + ":" + (hostPort != null ? hostPort : "") + "/" + applicationUri;
-                                    addParam(new Param<String, Object>("Refresh", "0; url=http://" + redirectUrl));
-                                }},
+                                new ParamMap<String, Param<String, Object>>(),
                                 request.getSession(),
                                 Status.STATUS_UNAUTHORIZED,
                                 ""
@@ -308,6 +288,7 @@ public class ActionHandler {
                 }
             }
         }
+        */
 
         if (className != null) {
             // set Class and Method
@@ -319,6 +300,66 @@ public class ActionHandler {
                 if (templateName != null) {
                     request.getParams().addParam(new Param<String, Object>(RequestKeys.RESPONSE_TEMPLATE.getValue(), templateName));
                 }
+
+                /*
+                // check the AuthenticationAuthorizationMap contains requestMethod
+                // com.bugzter.app.action.*                    *               *
+                // com.bugzter.app.action.UserCRUDAction       login           admin,system
+                Map<String, List<String>> methodGroupsMap = null;
+                if (authenticationAuthorizationMap.containsKey(actionClass.getPackage().getName() + "." + actionClass.getName())) {
+                    methodGroupsMap = authenticationAuthorizationMap.get(actionClass.getPackage().getName() + "." + actionClass.getName());
+                } else if (authenticationAuthorizationMap.containsKey(actionClass.getPackage().getName() + ".*")) {
+                    methodGroupsMap = authenticationAuthorizationMap.get(actionClass.getPackage().getName() + ".*");
+                }
+
+                // check this methodName has any authentication/authorization
+                if (methodGroupsMap.containsKey(methodName) || methodGroupsMap.containsKey("*")) {
+
+                    // authorization flag for user's group
+                    boolean userAuthorized = false;
+
+                    // the user does not have any groups but this method execution needs at least one group
+                    // return STATUS_UNAUTHORIZED
+                    if (groupNamesCommaSeparated == null) {
+                        return new Response(
+                                new ParamMap<String, Param<String, Object>>(),
+                                request.getSession(),
+                                Status.STATUS_UNAUTHORIZED,
+                                ""
+                        );
+                    }
+
+                    // authorized groups for this uri
+                    List<String> authorizedGroups = methodGroupsMap.get(methodName);
+
+                    // user has at least one group
+                    // if the authorizedGroups contains (*) it means any authenticated client may request this uri
+                    if (authorizedGroups.contains("*")) {
+                        userAuthorized = true;
+                    }
+
+                    // find the required group names
+                    else {
+                        for (String userGroupName : groupNamesCommaSeparated) {
+                            if (authorizedGroups.contains(userGroupName)) {
+                                userAuthorized = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // if the user is not authorized return STATUS_UNAUTHORIZED
+                    if (!userAuthorized) {
+                        return new Response(
+                                new ParamMap<String, Param<String, Object>>(),
+                                request.getSession(),
+                                Status.STATUS_UNAUTHORIZED,
+                                ""
+                        );
+                    }
+                }
+                */
+
                 // return the response
                 return (Response) method.invoke(actionClass.newInstance(), request);
             } catch (Exception e) {
