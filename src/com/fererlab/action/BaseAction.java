@@ -28,8 +28,9 @@ public class BaseAction extends ActionResponse implements Action {
     private Collector collector = new Collector();
 
     public BaseAction() {
-        xstream.autodetectAnnotations(true);
         xstream.setMode(XStream.NO_REFERENCES);
+        xStreamJSON.setMode(XStream.NO_REFERENCES);
+        xstream.autodetectAnnotations(true);
         xStreamJSON.autodetectAnnotations(true);
     }
 
