@@ -20,6 +20,7 @@ public class Collector {
         final List<Callable<Object>> callableList = new ArrayList<Callable<Object>>();
         final List<Callable<Object>> dbCallableList = new ArrayList<Callable<Object>>();
         final List<Callable<Object>> wsCallableList = new ArrayList<Callable<Object>>();
+        final List<Callable<Object>> httpCallableList = new ArrayList<Callable<Object>>();
         for (final Exec exec : execs) {
             if (exec instanceof DBExec) {
                 dbCallableList.add(
@@ -31,6 +32,14 @@ public class Collector {
                         });
             } else if (exec instanceof WSExec) {
                 wsCallableList.add(
+                        new Callable<Object>() {
+                            @Override
+                            public Object call() throws Exception {
+                                return exec.run();
+                            }
+                        });
+            } else if (exec instanceof HttpExec) {
+                httpCallableList.add(
                         new Callable<Object>() {
                             @Override
                             public Object call() throws Exception {
@@ -64,6 +73,14 @@ public class Collector {
             }
         };
         allCallables.add(wsCallable);
+
+        Callable<Object> httpCallable = new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                return httpForkJoinPool.invokeAll(httpCallableList);
+            }
+        };
+        allCallables.add(httpCallable);
 
         Callable<Object> callable = new Callable<Object>() {
             @Override

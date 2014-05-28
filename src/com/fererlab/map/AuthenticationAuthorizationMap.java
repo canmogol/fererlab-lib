@@ -113,6 +113,10 @@ public class AuthenticationAuthorizationMap extends HashMap<String, Map<String, 
                             }
                         }
                         // "com.bugzter.app.action.UserCRUDAction" -> {"login" => [admin,system]}
+                        // if there is not entry until now, put an empty HashMap
+                        if (!this.containsKey(packageClassName)) {
+                            this.put(packageClassName, new HashMap<String, List<String>>());
+                        }
                         this.get(packageClassName).put(methodName, groupNamesList);
                     }
                 }
